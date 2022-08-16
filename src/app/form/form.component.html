@@ -1,35 +1,24 @@
-<form #userForm="ngForm" (ngSubmit)="onSubmit()">
+<form (ngSubmit)="onSubmit()" [formGroup]="userForm">
   <div class="mb-3">
     <label class="form-label" for="name">Имя:</label>
-    <input #name="ngModel"
-           [(ngModel)]="user.name"
-           class="form-control"
-           id="name"
-           maxlength="10"
-           minlength="2"
-           name="name"
-           required
-           type="text">
-    <div *ngIf="formErrors.name" class="alert alert-danger">{{formErrors.name}}</div>
+    <input class="form-control" formControlName="name" id="name" type="text">
   </div>
 
   <div class="mb-3">
-    <label class="form-label" for="age">Возраст:</label>
-    <input #age="ngModel" [(ngModel)]="user.age" class="form-control" id="age" name="age" required type="number">
-    <div *ngIf="formErrors.age" class="alert alert-danger">{{formErrors.age}}</div>
+    <label class="form-label" for="password">Пароль:</label>
+    <input class="form-control" formControlName="password" id="password" type="text">
   </div>
 
   <div class="mb-3">
-    <label class="form-label" for="role">Роль:</label>
-    <select [(ngModel)]="user.role" class="form-select" id="role" name="role" required>
-      <option disabled selected value="">Выберите роль</option>
-      <option *ngFor="let role of roles" [value]="role">{{role}}</option>
-    </select>
-  </div>
-
-  <div class="mb-3">
-    <button [disabled]="userForm.form.invalid" class="btn btn-info">Сохранить</button>
+    <button [disabled]="userForm.invalid" class="btn btn-info">Сохранить</button>
   </div>
 </form>
 
-<p>{{user | json}}</p>
+
+<!--<div class="mb-3">-->
+<!--  <label class="form-label" for="role">Роль:</label>-->
+<!--  <select [(ngModel)]="user.role" class="form-select" id="role" name="role" required>-->
+<!--    <option disabled selected value="">Выберите роль</option>-->
+<!--    <option *ngFor="let role of roles" [value]="role">{{role}}</option>-->
+<!--  </select>-->
+<!--</div>-->
