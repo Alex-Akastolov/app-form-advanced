@@ -1,6 +1,8 @@
 import {Component, OnInit} from '@angular/core';
-import {FormBuilder, FormGroup, ValidationErrors, Validators} from "@angular/forms";
+import {AbstractControl, FormBuilder, FormGroup, ValidationErrors, Validators} from "@angular/forms";
 import {User} from "../user";
+import {emailValidator, observableUrlValidator, rangeValidator} from "../custom-validators";
+import {FORM_ERRORS, FORM_LABELS, FORM_PLACEHOLDERS, FORM_SUCCESS, ROLES, VALIDATION_MESSAGES} from "../form-data";
 
 @Component({
   selector: 'app-form',
@@ -9,44 +11,20 @@ import {User} from "../user";
 })
 export class FormComponent implements OnInit {
 
+  formLabels = FORM_LABELS
+  formPlaceholders = FORM_PLACEHOLDERS
+  formErrors: any = FORM_ERRORS
+  formSuccess = FORM_SUCCESS
+  validationMessages: any = VALIDATION_MESSAGES
+  roles: string[] = ROLES
   userForm!: FormGroup
-
-  roles: string[] = ['Гость', 'Модератор', 'Администратор']
-  user: User = new User(1, null, null, null, null, null)
-
-  formErrors: any = {
-    name: '',
-    password: '',
-    email: '',
-    role: '',
-    age: ''
-  }
-
-  validationMessages: any = {
-    name: {
-      required: 'Имя обязательно',
-      minlength: 'Минимальная длина 2 символа',
-      maxlength: 'Максимальная длина 10 символа'
-    },
-    password: {
-      required: 'Пароль обязателен',
-      minlength: 'Минимальная длина 6 символов',
-      maxlength: 'Максимальная длина 15 символов'
-    },
-    email: {
-      required: 'Email обязателен',
-      pattern: 'Неправильный формат email'
-    },
-    age: {
-      required: 'Возраст обязателен',
-      pattern: 'Значение должно быть целым числом'
-    },
-    role: {
-      required: 'Роль обязательна'
-    }
-  }
+  private user: User = new User(1, null, null, null, null, null, null)
 
   constructor(private fb: FormBuilder) {
+  }
+
+  get form(): { [key: string]: AbstractControl } {
+    return this.userForm.controls
   }
 
   ngOnInit(): void {
@@ -57,36 +35,32 @@ export class FormComponent implements OnInit {
     console.log('Form submitted')
   }
 
-  private buildForm(): void {
-    this.userForm = this.fb.group({
-      name: [this.user.name, [Validators.required, Validators.minLength(2), Validators.maxLength(10)]],
-      password: [this.user.password, [Validators.required, Validators.minLength(6), Validators.maxLength(15)]],
-      email: [this.user.email, [Validators.required, Validators.pattern(/^([a-zA-Z0-9_.\-])+@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,6})$/)]],
-      age: [this.user.age, [Validators.required, Validators.pattern(/^\d+$/)]],
-      role: [this.user.role, [Validators.required]]
-    })
-
-    this.userForm.valueChanges.subscribe(() => this.onValueChanged())
-  }
-
-
-  private onValueChanged(): void {
+  onValueChanged(): void {
     const form = this.userForm
 
     Object.keys(this.formErrors).forEach(field => {
       const control = form.get(field)
       this.formErrors[field] = ''
 
-      if (control && control.dirty && control.invalid) {
+      if ((control?.dirty || control?.touched) && control.invalid) {
         const messages = this.validationMessages[field]
-        Object.keys(control.errors as ValidationErrors).forEach(key => {
-          this.formErrors[field] += messages[key] + ' '
+        Object.keys(control.errors as ValidationErrors).some(key => {
+          this.formErrors[field] = messages[key]
         })
       }
     })
   }
 
-}
+  private buildForm(): void {
+    this.userForm = this.fb.group({
+      name: [this.user.name, [Validators.required, Validators.minLength(2), Validators.maxLength(10)]],
+      password: [this.user.password, [Validators.required, Validators.minLength(6), Validators.maxLength(15)]],
+      email: [this.user.email, [Validators.required, emailValidator]],
+      age: [this.user.age, [Validators.required, rangeValidator(1, 80)]],
+      site: [this.user.site, [Validators.required], [observableUrlValidator]],
+      role: [this.user.role, [Validators.required]]
+    })
 
-// RegExp for Email
-//
+    this.userForm.valueChanges.subscribe(() => this.onValueChanged())
+  }
+}
